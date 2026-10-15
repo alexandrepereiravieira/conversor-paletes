@@ -145,7 +145,7 @@ input.invalid{border-color:var(--danger);box-shadow:0 0 0 1px var(--danger)}
           <label for="cx">Pacotes / caixas</label>
           <div class="stepper">
             <button type="button" data-step="cx" data-d="-1" aria-label="Diminuir caixas">−</button>
-            <input id="cx" type="number" min="0" inputmode="numeric" pattern="[0-9]*" value="180">
+            <input id="cx" type="number" min="0" inputmode="numeric" pattern="[0-9]*" value="0">
             <button type="button" data-step="cx" data-d="1" aria-label="Aumentar caixas">+</button>
           </div>
         </div>
@@ -153,7 +153,7 @@ input.invalid{border-color:var(--danger);box-shadow:0 0 0 1px var(--danger)}
           <label for="un">Unidades soltas</label>
           <div class="stepper">
             <button type="button" data-step="un" data-d="-1" aria-label="Diminuir unidades">−</button>
-            <input id="un" type="number" min="0" inputmode="numeric" pattern="[0-9]*" value="2868">
+            <input id="un" type="number" min="0" inputmode="numeric" pattern="[0-9]*" value="0">
             <button type="button" data-step="un" data-d="1" aria-label="Aumentar unidades">+</button>
           </div>
         </div>
@@ -199,19 +199,34 @@ input.invalid{border-color:var(--danger);box-shadow:0 0 0 1px var(--danger)}
 
 <script>
 const KEY = "conversor-paletes-produtos-v1";
+const KEY_BASE = "conversor-paletes-base";
+const VERSAO_BASE = 2;
 const PADRAO = [
-  { id: "ita350", nome: "Lata Ita 350ml", upp: 12, ppl: 12, lpp: 9 }
+  { id: "lata350",     nome: "Lata 350ml",      upp: 12, ppl: 22, lpp: 14 },
+  { id: "garrafa600",  nome: "Garrafa 600ml",   upp: 24, ppl: 7,  lpp: 7 },
+  { id: "garrafa1000", nome: "Garrafa 1000ml",  upp: 12, ppl: 10, lpp: 6 },
+  { id: "lata269",     nome: "Lata 269ml",      upp: 12, ppl: 28, lpp: 14 },
+  { id: "longneck275", nome: "Long neck 275ml", upp: 12, ppl: 28, lpp: 8 }
 ];
 let produtos = carregar();
 let atualId = produtos[0].id;
 
 function carregar(){
+  let lista = null, versao = 0;
   try{
     const raw = localStorage.getItem(KEY);
-    const lista = raw ? JSON.parse(raw) : null;
-    if (Array.isArray(lista) && lista.length) return lista;
+    lista = raw ? JSON.parse(raw) : null;
+    versao = Number(localStorage.getItem(KEY_BASE)) || 0;
   }catch(e){}
-  return PADRAO.map(p => ({...p}));
+  if (!Array.isArray(lista) || !lista.length) lista = [];
+  if (versao < VERSAO_BASE){
+    // Atualiza a base de quem já usava o app: tira o exemplo antigo (se não foi editado) e inclui os produtos padrão que faltam
+    lista = lista.filter(p => !(p.id === "ita350" && p.upp === 12 && p.ppl === 12 && p.lpp === 9));
+    const nomes = new Set(lista.map(p => p.nome.trim().toLowerCase()));
+    PADRAO.forEach(p => { if (!nomes.has(p.nome.toLowerCase())) lista.push({...p}); });
+    try{ localStorage.setItem(KEY, JSON.stringify(lista)); localStorage.setItem(KEY_BASE, VERSAO_BASE); }catch(e){}
+  }
+  return lista.length ? lista : PADRAO.map(p => ({...p}));
 }
 function gravar(){
   try{ localStorage.setItem(KEY, JSON.stringify(produtos)); }catch(e){}

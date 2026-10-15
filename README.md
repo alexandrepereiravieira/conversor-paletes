@@ -15,6 +15,15 @@ Abra o `index.html` no navegador (computador ou celular).
 - **Pacotes por lastro** (quantos pacotes formam uma camada)
 - **Lastros por palete** (quantas camadas formam um palete)
 
+### Produtos já cadastrados
+| Produto | Un/pacote | Pacotes/lastro | Lastros/palete | Pacotes/palete |
+|---|---|---|---|---|
+| Lata 350ml | 12 | 22 | 14 | 308 |
+| Garrafa 600ml | 24 | 7 | 7 | 49 |
+| Garrafa 1000ml | 12 | 10 | 6 | 60 |
+| Lata 269ml | 12 | 28 | 14 | 392 |
+| Long neck 275ml | 12 | 28 | 8 | 224 |
+
 Para alterar um produto, salve de novo com o mesmo nome.
 Os produtos ficam salvos no navegador de cada aparelho.
 
