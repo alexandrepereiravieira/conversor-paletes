@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F2A900">
+<title>Conversor de paletes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E6EAEE; --surface:#FFFFFF; --ink:#18232E; --muted:#5B6875; --line:#C9D1D8;
+  --accent:#F2A900; --accent-ink:#1A1300; --wood:#B98A4E; --wood-dark:#8A6232; --wood-num:#8A6232;
+  --pack:#3D6A8C; --pack-2:#5585A8; --unit:#9AA8B4; --danger:#C0392B;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#121A21; --surface:#1B252E; --ink:#E7EDF2; --muted:#94A3B0; --line:#2E3B47;
+    --accent:#F5B91E; --wood:#A07843; --wood-dark:#6E4F28; --wood-num:#D9A866;
+    --pack:#4F84AC; --pack-2:#6A9BC0; --unit:#5D6B77; --danger:#D9534F;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#121A21; --surface:#1B252E; --ink:#E7EDF2; --muted:#94A3B0; --line:#2E3B47;
+  --accent:#F5B91E; --wood:#A07843; --wood-dark:#6E4F28; --wood-num:#D9A866;
+  --pack:#4F84AC; --pack-2:#6A9BC0; --unit:#5D6B77; --danger:#D9534F;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+main{max-width:980px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-left,0px)) 40px max(16px,env(safe-area-inset-right,0px))}
+h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:2rem;line-height:1;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 18px}
+
+/* Layout: celular = entrada, resultado, configuração. Desktop = entrada | configuração, resultado embaixo */
+.layout{display:grid;gap:14px;grid-template-columns:1fr;grid-template-areas:"entrada" "res" "config"}
+.layout > *{min-width:0}
+.a-entrada{grid-area:entrada}.a-res{grid-area:res}.a-config{grid-area:config}
+@media (min-width:760px){
+  .layout{grid-template-columns:1fr 1fr;grid-template-areas:"entrada config" "res res";gap:18px}
+}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.panel h2{font-size:1.05rem;font-weight:600;margin:0 0 12px}
+label{display:block;font-size:.9rem;color:var(--muted);margin-bottom:5px}
+input,select{width:100%;min-height:50px;font:inherit;font-size:1.15rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+select{appearance:none;-webkit-appearance:none;padding-right:40px;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 20px) 50%,calc(100% - 14px) 50%;background-size:6px 6px;background-repeat:no-repeat;font-weight:600}
+input:focus,select:focus,button:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.hint{font-size:.85rem;color:var(--muted);margin:8px 0 0}
+
+/* Campo com botões − e + */
+.stepper{display:grid;grid-template-columns:56px 1fr 56px;gap:6px}
+.stepper input{text-align:center;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.6rem;font-weight:700;padding:6px}
+.stepper button{min-height:50px;font-size:1.5rem;line-height:1;padding:0}
+.two{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:430px) and (max-width:759px){.two{grid-template-columns:1fr 1fr}}
+
+button{font:inherit;font-weight:600;min-height:48px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:10px 14px;cursor:pointer;touch-action:manipulation}
+button:active{transform:translateY(1px)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.btn-clear{width:100%;margin-top:14px}
+
+/* Configuração recolhível */
+details.panel{padding:0}
+details.panel summary{list-style:none;cursor:pointer;padding:16px;display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:56px;font-weight:600;font-size:1.05rem}
+details.panel summary::-webkit-details-marker{display:none}
+details.panel summary .sum-info{font-weight:400;font-size:.85rem;color:var(--muted);display:block}
+details.panel summary::after{content:"";flex:0 0 auto;width:10px;height:10px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin-top:-4px;transition:transform .2s}
+details.panel[open] summary::after{transform:rotate(-135deg);margin-top:4px}
+.cfg-body{padding:0 16px 16px}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;align-items:end}
+.row3 label{font-size:.8rem;line-height:1.2}
+.row3 input{text-align:center;font-weight:600}
+
+/* Resultado */
+.readout{display:grid;grid-template-columns:repeat(4,1fr);border:2px solid var(--ink);border-radius:12px;overflow:hidden;background:var(--surface)}
+.cell{padding:12px 6px;text-align:center;border-right:1px solid var(--line);min-width:0}
+.cell:last-child{border-right:none}
+.num{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:clamp(2.2rem,11vw,3.4rem);line-height:1;overflow-wrap:anywhere}
+.cell.pal .num{color:var(--wood-num)}
+.unit-name{font-size:clamp(.78rem,3.4vw,1rem);color:var(--muted)}
+@media (min-width:760px){.cell{text-align:left;padding:14px 16px}}
+.line-out{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.25rem;margin:12px 0 0}
+.totals{color:var(--muted);font-size:.95rem;margin:4px 0 0}
+.warn{background:var(--accent);color:var(--accent-ink);border-radius:8px;padding:10px 12px;margin-top:12px;font-weight:500}
+.cap-info{font-size:.85rem;color:var(--muted);margin:12px 0 0}
+input::placeholder{color:var(--muted);opacity:.55;font-weight:400}
+input.invalid{border-color:var(--danger);box-shadow:0 0 0 1px var(--danger)}
+.form-msg{border-radius:8px;padding:10px 12px;margin-top:12px;font-size:.9rem;font-weight:500}
+.form-msg.erro{background:var(--danger);color:#fff}
+.form-msg.ok{background:var(--pack);color:#fff}
+
+/* Desenho dos paletes */
+.stage{margin-top:14px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.stacks{display:flex;gap:14px;align-items:flex-end;min-height:120px;padding:8px 2px;width:max-content;min-width:100%}
+.stack{display:flex;flex-direction:column-reverse;align-items:center;gap:2px}
+.base,.layer{width:var(--sw,110px)}
+@media (min-width:760px){.stacks{gap:22px}.stack{--sw:150px}}
+.base{height:12px;background:repeating-linear-gradient(90deg,var(--wood) 0 24px,var(--wood-dark) 24px 30px);border-radius:2px}
+.layer{height:12px;background:var(--pack);border-radius:2px}
+.layer:nth-child(odd){background:var(--pack-2)}
+.layer.partial{background:transparent;border:2px dashed var(--pack);display:flex;gap:2px;padding:1px;height:14px}
+.layer.partial i{flex:0 0 auto;width:8px;background:var(--pack);border-radius:1px}
+.loose{display:flex;flex-wrap:wrap;gap:3px;max-width:110px;justify-content:center}
+.loose i{width:8px;height:8px;border-radius:50%;background:var(--unit)}
+.cap{font-size:.78rem;color:var(--muted);text-align:center;margin-top:6px;white-space:nowrap}
+.more{font-family:"Barlow Condensed",sans-serif;font-size:1.5rem;color:var(--muted);align-self:center}
+
+/* Lista de exclusão */
+.del-list{border:1px solid var(--line);border-radius:10px;margin:12px 0 0;padding:4px 0;list-style:none}
+.del-list li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px}
+.del-list li + li{border-top:1px solid var(--line)}
+.del-list .pname{min-width:0;overflow-wrap:anywhere;font-weight:500}
+.del-list .pcfg{display:block;font-size:.8rem;color:var(--muted);font-weight:400}
+.del-list button{flex:0 0 auto;font-size:.9rem}
+.del-list button.confirm{background:var(--danger);border-color:var(--danger);color:#fff}
+.del-list button:disabled{opacity:.45;cursor:not-allowed}
+.del-head{display:flex;justify-content:space-between;align-items:center;font-size:.9rem;color:var(--muted)}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Conversor de paletes</h1>
+  <p class="sub">Informe caixas e unidades soltas. O resultado aparece na hora.</p>
+
+  <div class="layout">
+    <section class="panel a-entrada" aria-labelledby="h-entrada">
+      <h2 id="h-entrada">Entrada</h2>
+      <div class="field">
+        <label for="produto">Produto</label>
+        <select id="produto"></select>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label for="cx">Pacotes / caixas</label>
+          <div class="stepper">
+            <button type="button" data-step="cx" data-d="-1" aria-label="Diminuir caixas">−</button>
+            <input id="cx" type="number" min="0" inputmode="numeric" pattern="[0-9]*" value="180">
+            <button type="button" data-step="cx" data-d="1" aria-label="Aumentar caixas">+</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="un">Unidades soltas</label>
+          <div class="stepper">
+            <button type="button" data-step="un" data-d="-1" aria-label="Diminuir unidades">−</button>
+            <input id="un" type="number" min="0" inputmode="numeric" pattern="[0-9]*" value="2868">
+            <button type="button" data-step="un" data-d="1" aria-label="Aumentar unidades">+</button>
+          </div>
+        </div>
+      </div>
+      <button type="button" class="btn-clear" id="limpar">Zerar quantidades</button>
+    </section>
+
+    <section class="a-res" aria-live="polite" aria-label="Resultado">
+      <div class="readout">
+        <div class="cell pal"><div class="num" id="r-pal">0</div><div class="unit-name" id="n-pal">paletes</div></div>
+        <div class="cell"><div class="num" id="r-las">0</div><div class="unit-name" id="n-las">lastros</div></div>
+        <div class="cell"><div class="num" id="r-pac">0</div><div class="unit-name" id="n-pac">pacotes</div></div>
+        <div class="cell"><div class="num" id="r-un">0</div><div class="unit-name" id="n-un">unidades</div></div>
+      </div>
+      <p class="line-out" id="linha"></p>
+      <p class="totals" id="totais"></p>
+      <div class="warn" id="aviso" hidden></div>
+      <div class="stage" aria-hidden="true"><div class="stacks" id="stacks"></div></div>
+    </section>
+
+    <details class="panel a-config" id="cfg">
+      <summary><span>Configuração do produto<span class="sum-info" id="sum-info"></span></span></summary>
+      <div class="cfg-body">
+        <div class="field">
+          <label for="nome">Nome do produto</label>
+          <input id="nome" type="text" autocomplete="off" placeholder="Ex.: Lata Ita 350ml">
+        </div>
+        <div class="row3">
+          <div><label for="upp">Unidades por pacote</label><input id="upp" type="number" min="1" inputmode="numeric" pattern="[0-9]*" placeholder="12"></div>
+          <div><label for="ppl">Pacotes por lastro</label><input id="ppl" type="number" min="1" inputmode="numeric" pattern="[0-9]*" placeholder="12"></div>
+          <div><label for="lpp">Lastros por palete</label><input id="lpp" type="number" min="1" inputmode="numeric" pattern="[0-9]*" placeholder="9"></div>
+        </div>
+        <div class="form-msg" id="form-msg" role="status" hidden></div>
+        <div class="actions">
+          <button class="primary" id="salvar" type="button">Salvar</button>
+          <button id="excluir" type="button" aria-expanded="false" aria-controls="del-box">Excluir</button>
+        </div>
+        <div id="del-box" hidden></div>
+      </div>
+    </details>
+  </div>
+</main>
+
+<script>
+const KEY = "conversor-paletes-produtos-v1";
+const PADRAO = [
+  { id: "ita350", nome: "Lata Ita 350ml", upp: 12, ppl: 12, lpp: 9 }
+];
+let produtos = carregar();
+let atualId = produtos[0].id;
+
+function carregar(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    const lista = raw ? JSON.parse(raw) : null;
+    if (Array.isArray(lista) && lista.length) return lista;
+  }catch(e){}
+  return PADRAO.map(p => ({...p}));
+}
+function gravar(){
+  try{ localStorage.setItem(KEY, JSON.stringify(produtos)); }catch(e){}
+}
+
+const $ = id => document.getElementById(id);
+const int = el => Math.max(0, Math.floor(Number(el.value) || 0));
+const plural = (n, s, p) => n === 1 ? s : p;
+const fmt = n => n.toLocaleString("pt-BR");
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;"); }
+
+function preencherSelect(){
+  $("produto").innerHTML = produtos.map(p => `<option value="${p.id}">${esc(p.nome)}</option>`).join("");
+  $("produto").value = atualId;
+}
+function produtoAtual(){
+  return produtos.find(x => x.id === atualId) || produtos[0];
+}
+
+function calcular(){
+  const cx = int($("cx")), un = int($("un"));
+  const p = produtoAtual();
+  const upp = p.upp, ppl = p.ppl, lpp = p.lpp;
+  const aviso = $("aviso");
+  $("sum-info").textContent = `${upp} un/pacote, ${ppl} pacotes/lastro, ${lpp} lastros/palete`;
+
+  if (!upp || !ppl || !lpp){
+    aviso.hidden = false;
+    aviso.textContent = "Preencha a configuração do produto com valores maiores que zero.";
+    $("cfg").open = true;
+    return;
+  }
+  aviso.hidden = true;
+
+  const totalUn = cx * upp + un;
+  const totalPac = Math.floor(totalUn / upp);
+  const restoUn = totalUn % upp;
+  const pacPorPal = ppl * lpp;
+  const paletes = Math.floor(totalPac / pacPorPal);
+  const sobraPac = totalPac % pacPorPal;
+  const lastros = Math.floor(sobraPac / ppl);
+  const pacotes = sobraPac % ppl;
+
+  $("r-pal").textContent = fmt(paletes); $("n-pal").textContent = plural(paletes,"palete","paletes");
+  $("r-las").textContent = lastros; $("n-las").textContent = plural(lastros,"lastro","lastros");
+  $("r-pac").textContent = pacotes; $("n-pac").textContent = plural(pacotes,"pacote","pacotes");
+  $("r-un").textContent = restoUn; $("n-un").textContent = plural(restoUn,"unidade","unidades");
+
+  $("linha").textContent = `${p.nome}: ${fmt(paletes)} ${plural(paletes,"palete","paletes")}, ${lastros} ${plural(lastros,"lastro","lastros")}, ${pacotes} ${plural(pacotes,"pacote","pacotes")} e ${restoUn} ${plural(restoUn,"unidade","unidades")}`;
+  $("totais").textContent = `Total: ${fmt(totalUn)} unidades = ${fmt(totalPac)} pacotes completos + ${restoUn} ${plural(restoUn,"unidade solta","unidades soltas")}.`;
+
+  desenhar(paletes, lastros, pacotes, restoUn, lpp);
+}
+
+function desenhar(paletes, lastros, pacotes, restoUn, lpp){
+  const max = window.innerWidth < 760 ? 3 : 6;
+  let html = "";
+  for (let i = 0; i < Math.min(paletes, max); i++) html += pilha(lpp, 0, `Palete ${i+1}`);
+  if (paletes > max) html += `<div class="more">+${fmt(paletes-max)}</div>`;
+  if (lastros || pacotes) html += pilha(lastros, pacotes, "Incompleto");
+  if (restoUn) html += `<div class="stack"><div class="cap">Soltas</div><div class="loose">${"<i></i>".repeat(Math.min(restoUn,48))}</div></div>`;
+  $("stacks").innerHTML = html || `<p class="hint">Nada para paletizar ainda.</p>`;
+}
+function pilha(nLastros, nPacotes, legenda){
+  let camadas = "";
+  for (let i = 0; i < Math.min(nLastros, 12); i++) camadas += `<div class="layer"></div>`;
+  if (nPacotes) camadas += `<div class="layer partial">${"<i></i>".repeat(Math.min(nPacotes, 10))}</div>`;
+  return `<div class="stack"><div class="cap">${legenda}</div><div class="base"></div>${camadas}</div>`;
+}
+
+/* Botões − e + (segurar repete) */
+document.querySelectorAll("[data-step]").forEach(btn => {
+  let t1, t2;
+  const passo = () => {
+    const el = $(btn.dataset.step);
+    el.value = Math.max(0, int(el) + Number(btn.dataset.d));
+    calcular();
+  };
+  const parar = () => { clearTimeout(t1); clearInterval(t2); };
+  btn.addEventListener("pointerdown", e => {
+    e.preventDefault(); passo();
+    t1 = setTimeout(() => { t2 = setInterval(passo, 70); }, 400);
+  });
+  ["pointerup","pointerleave","pointercancel"].forEach(ev => btn.addEventListener(ev, parar));
+  btn.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); passo(); } });
+});
+
+/* Seleciona o número inteiro ao tocar, para digitar por cima */
+document.querySelectorAll('input[type="number"]').forEach(el => el.addEventListener("focus", () => setTimeout(() => el.select(), 0)));
+
+$("limpar").addEventListener("click", () => { $("cx").value = 0; $("un").value = 0; calcular(); });
+$("produto").addEventListener("change", e => { atualId = e.target.value; calcular(); });
+["cx","un"].forEach(id => $(id).addEventListener("input", calcular));
+
+const CAMPOS = ["nome","upp","ppl","lpp"];
+let msgTimer;
+CAMPOS.forEach(id => $(id).addEventListener("input", () => {
+  $(id).classList.remove("invalid");
+  if (!CAMPOS.some(c => $(c).classList.contains("invalid"))) $("form-msg").hidden = true;
+}));
+
+$("salvar").addEventListener("click", () => {
+  const msg = $("form-msg");
+  clearTimeout(msgTimer);
+  const vazios = CAMPOS.filter(id => id === "nome" ? !$(id).value.trim() : !(Number($(id).value) >= 1));
+  CAMPOS.forEach(id => $(id).classList.toggle("invalid", vazios.includes(id)));
+  if (vazios.length){
+    msg.className = "form-msg erro"; msg.hidden = false;
+    msg.textContent = "Preencha todos os campos para salvar. Os números precisam ser maiores que zero.";
+    $(vazios[0]).focus();
+    return;
+  }
+  const nome = $("nome").value.trim();
+  const dados = {
+    nome,
+    upp: Math.floor(Number($("upp").value)),
+    ppl: Math.floor(Number($("ppl").value)),
+    lpp: Math.floor(Number($("lpp").value))
+  };
+  const existente = produtos.find(x => x.nome.trim().toLowerCase() === nome.toLowerCase());
+  if (existente){ Object.assign(existente, dados); atualId = existente.id; }
+  else { const novo = { id: "p" + Date.now(), ...dados }; produtos.push(novo); atualId = novo.id; }
+  gravar(); preencherSelect(); calcular();
+  if (!$("del-box").hidden) renderExcluir();
+  CAMPOS.forEach(id => $(id).value = "");
+  msg.className = "form-msg ok"; msg.hidden = false;
+  msg.textContent = existente ? `"${nome}" atualizado e selecionado.` : `"${nome}" cadastrado e selecionado.`;
+  msgTimer = setTimeout(() => { msg.hidden = true; }, 3500);
+});
+
+let pendente = null;
+function renderExcluir(){
+  const unico = produtos.length === 1;
+  $("del-box").innerHTML = `<ul class="del-list">
+    <li class="del-head"><span>Escolha o produto para excluir</span><button type="button" data-acao="fechar">Fechar</button></li>
+    ${produtos.map(p => `<li>
+      <span class="pname">${esc(p.nome)}<span class="pcfg">${p.upp} un/pacote, ${p.ppl} pac/lastro, ${p.lpp} lastros</span></span>
+      <button type="button" data-id="${p.id}" class="${pendente === p.id ? "confirm" : ""}" ${unico ? "disabled" : ""}>${pendente === p.id ? "Confirmar" : "Excluir"}</button>
+    </li>`).join("")}
+  </ul>${unico ? `<p class="hint">É preciso manter ao menos um produto cadastrado.</p>` : ""}`;
+}
+function fecharExcluir(){
+  pendente = null; $("del-box").hidden = true; $("excluir").setAttribute("aria-expanded","false");
+}
+$("excluir").addEventListener("click", () => {
+  if (!$("del-box").hidden){ fecharExcluir(); return; }
+  pendente = null; renderExcluir();
+  $("del-box").hidden = false; $("excluir").setAttribute("aria-expanded","true");
+});
+$("del-box").addEventListener("click", e => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+  if (btn.dataset.acao === "fechar"){ fecharExcluir(); return; }
+  const id = btn.dataset.id;
+  if (!id || produtos.length === 1) return;
+  if (pendente !== id){ pendente = id; renderExcluir(); return; }
+  produtos = produtos.filter(x => x.id !== id);
+  pendente = null;
+  if (!produtos.some(x => x.id === atualId)) atualId = produtos[0].id;
+  gravar(); preencherSelect(); calcular(); renderExcluir();
+});
+
+/* Configuração aberta no computador, recolhida no celular */
+if (window.matchMedia("(min-width:760px)").matches) $("cfg").open = true;
+let rz; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(calcular, 150); });
+
+preencherSelect(); calcular();
+</script>
+</body>
+</html>
