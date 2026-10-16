@@ -89,7 +89,6 @@ details.panel[open] summary::after{transform:rotate(-135deg);margin-top:4px}
 .unit-name{font-size:clamp(.78rem,3.4vw,1rem);color:var(--muted)}
 @media (min-width:760px){.cell{text-align:left;padding:14px 16px}}
 .line-out{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.25rem;margin:12px 0 0}
-.totals{color:var(--muted);font-size:.95rem;margin:4px 0 0}
 .warn{background:var(--accent);color:var(--accent-ink);border-radius:8px;padding:10px 12px;margin-top:12px;font-weight:500}
 .cap-info{font-size:.85rem;color:var(--muted);margin:12px 0 0}
 input::placeholder{color:var(--muted);opacity:.55;font-weight:400}
@@ -168,8 +167,7 @@ input.invalid{border-color:var(--danger);box-shadow:0 0 0 1px var(--danger)}
         <div class="cell"><div class="num" id="r-pac">0</div><div class="unit-name" id="n-pac">pacotes</div></div>
         <div class="cell"><div class="num" id="r-un">0</div><div class="unit-name" id="n-un">unidades</div></div>
       </div>
-      <p class="line-out" id="linha"></p>
-      <p class="totals" id="totais"></p>
+      <p class="line-out" id="totais"></p>
       <div class="warn" id="aviso" hidden></div>
       <div class="stage" aria-hidden="true"><div class="stacks" id="stacks"></div></div>
     </section>
@@ -275,8 +273,7 @@ function calcular(){
   $("r-pac").textContent = pacotes; $("n-pac").textContent = plural(pacotes,"pacote","pacotes");
   $("r-un").textContent = restoUn; $("n-un").textContent = plural(restoUn,"unidade","unidades");
 
-  $("linha").textContent = `${p.nome}: ${fmt(paletes)} ${plural(paletes,"palete","paletes")}, ${lastros} ${plural(lastros,"lastro","lastros")}, ${pacotes} ${plural(pacotes,"pacote","pacotes")} e ${restoUn} ${plural(restoUn,"unidade","unidades")}`;
-  $("totais").textContent = `Total: ${fmt(totalUn)} unidades = ${fmt(totalPac)} pacotes completos + ${restoUn} ${plural(restoUn,"unidade solta","unidades soltas")}.`;
+  $("totais").textContent = `Total: ${fmt(totalPac)} ${plural(totalPac,"pacote completo","pacotes completos")} + ${restoUn} ${plural(restoUn,"unidade solta","unidades soltas")}`;
 
   desenhar(paletes, lastros, pacotes, restoUn, lpp);
 }
