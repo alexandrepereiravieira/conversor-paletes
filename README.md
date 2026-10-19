@@ -23,6 +23,7 @@ Abra o `index.html` no navegador (computador ou celular).
 | Garrafa 1000ml | 12 | 10 | 6 | 60 |
 | Lata 269ml | 12 | 28 | 14 | 392 |
 | Long neck 275ml | 12 | 28 | 8 | 224 |
+| Garrafa 300ml | 12 | 8 | 9 | 72 |
 
 Para alterar um produto, salve de novo com o mesmo nome.
 Os produtos ficam salvos no navegador de cada aparelho.

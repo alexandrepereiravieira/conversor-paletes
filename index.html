@@ -198,13 +198,14 @@ input.invalid{border-color:var(--danger);box-shadow:0 0 0 1px var(--danger)}
 <script>
 const KEY = "conversor-paletes-produtos-v1";
 const KEY_BASE = "conversor-paletes-base";
-const VERSAO_BASE = 2;
+const VERSAO_BASE = 3;
 const PADRAO = [
   { id: "lata350",     nome: "Lata 350ml",      upp: 12, ppl: 22, lpp: 14 },
   { id: "garrafa600",  nome: "Garrafa 600ml",   upp: 24, ppl: 7,  lpp: 7 },
   { id: "garrafa1000", nome: "Garrafa 1000ml",  upp: 12, ppl: 10, lpp: 6 },
   { id: "lata269",     nome: "Lata 269ml",      upp: 12, ppl: 28, lpp: 14 },
-  { id: "longneck275", nome: "Long neck 275ml", upp: 12, ppl: 28, lpp: 8 }
+  { id: "longneck275", nome: "Long neck 275ml", upp: 12, ppl: 28, lpp: 8 },
+  { id: "garrafa300",  nome: "Garrafa 300ml",   upp: 12, ppl: 8,  lpp: 9 }
 ];
 let produtos = carregar();
 let atualId = produtos[0].id;
